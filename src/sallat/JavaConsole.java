@@ -12,7 +12,7 @@ class JavaConsole{
 
     private StringBuilder buffer;
 
-    void read(String endOfSnippet){
+    boolean read(String endOfSnippet){
 	try(BufferedReader input = new BufferedReader(new InputStreamReader(in))){
 	    String line;
 	    while(true){
@@ -21,27 +21,32 @@ class JavaConsole{
 		    buffer.append("\t\t" + line);
 		    buffer.append('\n');
 		} else
-		    break;
+		    return true;
 	    }
 	} catch(IOException e){
 	    System.err.println("no input");
+	    return false;
 	}
     }
-	
-    void compile(){
-	String filename = CLASSNAME + ".java";
+
+    boolean compile(){
+	File srcfile = new File(CLASSNAME + ".java");
 	String snippet = buffer.toString();
-	try(FileWriter file = new FileWriter(filename)){
+	try(FileWriter file = new FileWriter(srcfile)){
 	    file.write(PREFIX + snippet + SUFFIX);
 	    file.close();
 	    try{
-	        new ProcessBuilder("javac", filename)
+	        new ProcessBuilder("javac", srcfile.getName())
 	            .inheritIO()
 		    .start()
 		    .waitFor();
 	    } catch(InterruptedException e) { } 
+	    return true;
 	} catch(IOException e){
-	    System.err.printf("unable to create file %s in current directory%n", filename);
+	    System.err.printf("unable to create file %s in current directory%n", srcfile.getName());
+	    return false;
+	} finally{
+	    srcfile.delete();
 	}
     }
 
@@ -53,7 +58,10 @@ class JavaConsole{
 		.waitFor();
 	} catch(IOException e){
 	    System.err.println("error executing class");
-	} catch(InterruptedException e) { }
+	} catch(InterruptedException e) { 
+	} finally{
+	    new File(CLASSNAME + ".class").delete();
+	}
     }
 
     JavaConsole(PrintStream out, InputStream in){
@@ -64,9 +72,8 @@ class JavaConsole{
 
     public static void main(String [] args){
 	JavaConsole console = new JavaConsole(System.out, System.in);
-	console.read("/end");
-	console.compile();
-	console.execute();
+	if(console.read("/end") && console.compile())
+	    console.execute();
     }
 }
 
