@@ -1,5 +1,3 @@
-package sallat;
-
 import java.io.*;
 import static java.util.Objects.requireNonNull;
 
@@ -35,13 +33,17 @@ class JavaConsole{
 	try(FileWriter file = new FileWriter(srcfile)){
 	    file.write(PREFIX + snippet + SUFFIX);
 	    file.close();
+	    int exitValue = 1;
 	    try{
-	        new ProcessBuilder("javac", srcfile.getName())
+		exitValue = new ProcessBuilder("javac", srcfile.getName())
 	            .inheritIO()
 		    .start()
 		    .waitFor();
 	    } catch(InterruptedException e) { } 
-	    return true;
+	    if(exitValue == 0)
+	    	return true;
+	    else
+		return false;
 	} catch(IOException e){
 	    System.err.printf("unable to create file %s in current directory%n", srcfile.getName());
 	    return false;
