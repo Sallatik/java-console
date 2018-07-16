@@ -10,7 +10,6 @@ class JavaConsole{
     private InputStream in;
 
     private File srcfile;
-    private File classfile;
 
     private StringBuilder buffer;
 
@@ -30,27 +29,34 @@ class JavaConsole{
 	    return false;
 	}
     }
-
-    boolean compile(){
+    
+    boolean writeToSrcfile(){
 	String snippet = buffer.toString();
 	try(FileWriter file = new FileWriter(srcfile)){
-	    file.write(PREFIX + snippet + SUFFIX);
-	    file.close();
-	    int exitValue = 1;
-	    try{
-		exitValue = new ProcessBuilder("javac", srcfile.getName())
-	            .inheritIO()
-		    .start()
-		    .waitFor();
-	    } catch(InterruptedException e) { } 
+    	    file.write(PREFIX + snippet + SUFFIX);
+	    return true;
+	} catch(IOException e){ 
+	    System.err.printf("unable to create file %s in current directory%n", srcfile.getName()); 
+	    return false;
+	}
+    }
+
+    boolean compile(){
+	if(!writeToSrcfile())
+	    return false;
+	int exitValue = 1;
+	try{
+	    exitValue = new ProcessBuilder("javac", srcfile.getName())
+	        .inheritIO()
+		.start()
+		.waitFor();
+	} catch(IOException e){
+	    System.err.println("error executing program");
+	} catch(InterruptedException e) { } // no support for interruption
 	    if(exitValue == 0)
 	    	return true;
 	    else
 		return false;
-	} catch(IOException e){
-	    System.err.printf("unable to create file %s in current directory%n", srcfile.getName());
-	    return false;
-	}
     }
 
     void execute(){
@@ -70,9 +76,9 @@ class JavaConsole{
 	buffer = new StringBuilder();
 
 	srcfile = new File(CLASSNAME + ".java");
-	classfile = new File(CLASSNAME + ".class");
 	srcfile.deleteOnExit();
-	classfile.deleteOnExit();
+
+	new File(CLASSNAME + ".class").deleteOnExit();
     }
 
     public static void main(String [] args){
