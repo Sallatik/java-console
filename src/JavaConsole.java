@@ -14,60 +14,60 @@ class JavaConsole{
     private StringBuilder buffer;
 
     boolean read(){
-	try(BufferedReader input = new BufferedReader(new InputStreamReader(in))){
-	    String line;
-	    while(true){
-		out.print('>');
-		if(!(line = input.readLine()).equals("/end")){
-		    buffer.append("\t\t" + line);
-		    buffer.append('\n');
-		} else
-		    return true;
-	    }
-	} catch(IOException e){
-	    System.err.println("no input");
-	    return false;
-	}
+		try(BufferedReader input = new BufferedReader(new InputStreamReader(in))){
+	    	String line;
+	    	while(true){
+				out.print('>');
+				if(!(line = input.readLine()).equals("/end")){
+		    		buffer.append("\t\t" + line);
+		 			buffer.append('\n');
+				} else
+		    		return true;
+	    	}
+		} catch(IOException e){
+	    	System.err.println("no input");
+	    	return false;
+		}
     }
     
     boolean writeToSrcfile(){
-	String snippet = buffer.toString();
-	try(FileWriter file = new FileWriter(srcfile)){
-    	    file.write(PREFIX + snippet + SUFFIX);
-	    return true;
-	} catch(IOException e){ 
-	    System.err.printf("unable to create file %s in current directory%n", srcfile.getName()); 
-	    return false;
+		String snippet = buffer.toString();
+		try(FileWriter file = new FileWriter(srcfile)){
+			file.write(PREFIX + snippet + SUFFIX);
+			return true;
+		} catch(IOException e){ 
+			System.err.printf("unable to create file %s in current directory%n", srcfile.getName()); 
+			return false;
+		}
 	}
-    }
 
     boolean compile(){
-	if(!writeToSrcfile())
-	    return false;
+		if(!writeToSrcfile())
+	    	return false;
 	int exitValue = 1;
-	try{
-	    exitValue = new ProcessBuilder("javac", srcfile.getName())
-	        .inheritIO()
-		.start()
-		.waitFor();
-	} catch(IOException e){
-	    System.err.println("error executing program");
-	} catch(InterruptedException e) { } // no support for interruption
-	    if(exitValue == 0)
-	    	return true;
-	    else
-		return false;
-    }
+		try{
+	    	exitValue = new ProcessBuilder("javac", srcfile.getName())
+	        	.inheritIO()
+				.start()
+				.waitFor();
+		} catch(IOException e){
+	    	System.err.println("error executing program");
+		} catch(InterruptedException e) { } // no support for interruption
+	    	if(exitValue == 0)
+	    		return true;
+	    	else
+				return false;
+    	}
 
     void execute(){
-	try{
-	    new ProcessBuilder("java", CLASSNAME)
-	        .inheritIO()
-		.start()
-		.waitFor();
-	} catch(IOException e){
-	    System.err.println("error executing class");
-	} catch(InterruptedException e) { }
+		try{
+	    	new ProcessBuilder("java", CLASSNAME)
+	        	.inheritIO()
+				.start()
+			.waitFor();
+		} catch(IOException e){
+	    	System.err.println("error executing class");
+		} catch(InterruptedException e) { }
     }
 
     JavaConsole(PrintStream out, InputStream in){
