@@ -3,7 +3,9 @@ import static java.util.Objects.requireNonNull;
 
 class JavaConsole{
     private static final String CLASSNAME = "TEMPCLASS";
-    private static final String PREFIX = "class " + CLASSNAME + "{\n\tpublic static void main(String[] args){\n";
+    private static final String PREFIX = "class " + CLASSNAME + "{\n"
+																	+ "\tpublic static void main(String[] args)" 
+																	+ " throws Exception {\n";
     private static final String SUFFIX = "\t}\n}";
 
     private PrintStream out;
@@ -13,24 +15,38 @@ class JavaConsole{
 
     private StringBuilder buffer;
 
-    boolean read(){
+    void run(){
 		try(BufferedReader input = new BufferedReader(new InputStreamReader(in))){
 	    	String line;
-	    	while(true){
-				out.print('>');
-				if(!(line = input.readLine()).equals("/end")){
-		    		buffer.append("\t\t" + line);
-		 			buffer.append('\n');
-				} else
-		    		return true;
-	    	}
+mainloop:	while(true){
+				out.print("java-console > ");
+				line = input.readLine();
+				switch(line){
+					case "/end" :
+						if(writeToSrcfile() && compile())
+							execute(); // execute only if previous methods succeed
+						buffer = new StringBuilder();
+						break;
+					case "/import":
+						break;
+
+					case "/exit" :
+
+					case "exit" :
+						out.println("Bye, have a good day!");
+						break mainloop;
+
+					default :
+		    			buffer.append("\t\t" + line);
+		 				buffer.append('\n');
+				}
+			}
 		} catch(IOException e){
 	    	System.err.println("no input");
-	    	return false;
 		}
     }
     
-    boolean writeToSrcfile(){
+    boolean writeToSrcfile(){ // returns true on success, false otherwise
 		String snippet = buffer.toString();
 		try(FileWriter file = new FileWriter(srcfile)){
 			file.write(PREFIX + snippet + SUFFIX);
@@ -41,7 +57,7 @@ class JavaConsole{
 		}
 	}
 
-    boolean compile(){
+    boolean compile(){ // returns true if the code has compiled
 		if(!writeToSrcfile())
 	    	return false;
 	int exitValue = 1;
@@ -51,9 +67,9 @@ class JavaConsole{
 				.start()
 				.waitFor();
 		} catch(IOException e){
-	    	System.err.println("error executing program");
+	    	System.err.println("error executing compiler");
 		} catch(InterruptedException e) { } // no support for interruption
-	    	if(exitValue == 0)
+	    	if(exitValue == 0) // exit value 0 means file compiled successfully
 	    		return true;
 	    	else
 				return false;
@@ -71,20 +87,19 @@ class JavaConsole{
     }
 
     JavaConsole(PrintStream out, InputStream in){
-	this.out = requireNonNull(out);
-	this.in = requireNonNull(in);
-	buffer = new StringBuilder();
+		this.out = requireNonNull(out);
+		this.in = requireNonNull(in);
+		buffer = new StringBuilder();
 
-	srcfile = new File(CLASSNAME + ".java");
-	srcfile.deleteOnExit();
+		srcfile = new File(CLASSNAME + ".java");
+		srcfile.deleteOnExit();
 
-	new File(CLASSNAME + ".class").deleteOnExit();
+		new File(CLASSNAME + ".class").deleteOnExit();
     }
 
     public static void main(String [] args){
-	JavaConsole console = new JavaConsole(System.out, System.in);
-	if(console.read() && console.compile())
-	    console.execute();
+		JavaConsole console = new JavaConsole(System.out, System.in);
+		console.run();
     }
 }
 
