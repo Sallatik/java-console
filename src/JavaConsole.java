@@ -8,48 +8,69 @@ class JavaConsole{
 																	+ " throws Exception {\n";
     private static final String SUFFIX = "\t}\n}";
 
+	private static final int EXIT = 2;
+	private static final int UNKNOWN = 1;
+	private static final int OK = 0;
+
     private PrintStream out;
     private InputStream in;
 
     private File srcfile;
 
-    private StringBuilder buffer;
+    private StringBuilder snippetBuffer;
+	private StringBuilder importBuffer;
 
     void run(){
 		try(BufferedReader input = new BufferedReader(new InputStreamReader(in))){
-	    	String line;
-mainloop:	while(true){
+			while(true){
 				out.print("java-console > ");
-				line = input.readLine();
-				switch(line){
-					case "/end" :
-						if(writeToSrcfile() && compile())
-							execute(); // execute only if previous methods succeed
-						buffer = new StringBuilder();
+				String line = input.readLine();
+				if(isCommand(line)){
+					int res = executeCommand(line);
+					if(res == EXIT)
 						break;
-					case "/import":
-						break;
-
-					case "/exit" :
-
-					case "exit" :
-						out.println("Bye, have a good day!");
-						break mainloop;
-
-					default :
-		    			buffer.append("\t\t" + line);
-		 				buffer.append('\n');
 				}
+				else
+					snippetBuffer.append(line);
 			}
 		} catch(IOException e){
 	    	System.err.println("no input");
 		}
     }
-    
+
+	int executeCommand(String command){
+		switch(command){
+			case "/end" :
+				if(writeToSrcfile() && compile())
+					execute(); // execute only if previous methods succeed
+				snippetBuffer = new StringBuilder();
+				return OK;
+
+			case "/import":
+				return OK;
+
+			case "/exit" :
+
+			case "exit" :
+				out.println("Bye, have a good day!");
+				return EXIT;
+			
+			default :
+				return UNKNOWN;
+		}
+	}
+
+	
+
+	boolean isCommand(String s){
+		return s.charAt(0) == '/';
+	}
+
     boolean writeToSrcfile(){ // returns true on success, false otherwise
-		String snippet = buffer.toString();
+		String imports = importBuffer.toString();
+		String snippet = snippetBuffer.toString();
 		try(FileWriter file = new FileWriter(srcfile)){
-			file.write(PREFIX + snippet + SUFFIX);
+			file.write(imports + PREFIX + snippet + SUFFIX);
 			return true;
 		} catch(IOException e){ 
 			System.err.printf("unable to create file %s in current directory%n", srcfile.getName()); 
@@ -89,7 +110,8 @@ mainloop:	while(true){
     JavaConsole(PrintStream out, InputStream in){
 		this.out = requireNonNull(out);
 		this.in = requireNonNull(in);
-		buffer = new StringBuilder();
+		snippetBuffer = new StringBuilder();
+		importBuffer = new StringBuilder();
 
 		srcfile = new File(CLASSNAME + ".java");
 		srcfile.deleteOnExit();
