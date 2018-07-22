@@ -4,13 +4,9 @@ import static java.util.Objects.requireNonNull;
 class JavaConsole{
     private static final String CLASSNAME = "TEMPCLASS";
     private static final String PREFIX = "class " + CLASSNAME + "{\n"
-																	+ "\tpublic static void main(String[] args)" 
-																	+ " throws Exception {\n";
+										+ "\tpublic static void main(String[] args)" 
+										+ " throws Exception {\n";
     private static final String SUFFIX = "\t}\n}";
-
-	private static final int EXIT = 2;
-	private static final int UNKNOWN = 1;
-	private static final int OK = 0;
 
     private PrintStream out;
     private InputStream in;
@@ -22,14 +18,12 @@ class JavaConsole{
 
     void run(){
 		try(BufferedReader input = new BufferedReader(new InputStreamReader(in))){
-			while(true){
+			boolean exit = false;
+			while(!exit){
 				out.print("java-console > ");
 				String line = input.readLine();
-				if(isCommand(line)){
-					int res = executeCommand(line);
-					if(res == EXIT)
-						break;
-				}
+				if(isCommand(line))
+					exit = executeCommand(line);
 				else
 					snippetBuffer.append(line);
 			}
@@ -38,26 +32,23 @@ class JavaConsole{
 		}
     }
 
-	int executeCommand(String command){
+	boolean executeCommand(String command){ // returns true only if the console is to be exited
 		switch(command){
 			case "/end" :
 				if(writeToSrcfile() && compile())
 					execute(); // execute only if previous methods succeed
 				snippetBuffer = new StringBuilder();
-				return OK;
+				break;
 
 			case "/import":
-				return OK;
+				// import implementation
+				break;
 
 			case "/exit" :
-
-			case "exit" :
 				out.println("Bye, have a good day!");
-				return EXIT;
-			
-			default :
-				return UNKNOWN;
+				return true;
 		}
+		return false;
 	}
 
 	
