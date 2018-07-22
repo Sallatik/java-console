@@ -1,5 +1,6 @@
 import java.io.*;
 import static java.util.Objects.requireNonNull;
+import java.util.Arrays;
 
 class JavaConsole{
     private static final String CLASSNAME = "TEMPCLASS";
@@ -25,7 +26,7 @@ class JavaConsole{
 				if(isCommand(line))
 					exit = executeCommand(line);
 				else
-					snippetBuffer.append(line);
+					snippetBuffer.append(line + ';');
 			}
 		} catch(IOException e){
 	    	System.err.println("no input");
@@ -33,15 +34,20 @@ class JavaConsole{
     }
 
 	boolean executeCommand(String command){ // returns true only if the console is to be exited
+		String [] tokens = command.trim().split("\\s+");
+		command = tokens[0];
+		String [] args = Arrays.copyOfRange(tokens, 1, tokens.length);
+
 		switch(command){
 			case "/end" :
 				if(writeToSrcfile() && compile())
-					execute(); // execute only if previous methods succeed
+					execute(); // execute only if previous method calls succeed
 				snippetBuffer = new StringBuilder();
 				break;
 
 			case "/import":
-				// import implementation
+				if(args.length >= 1)
+					importBuffer.append("import " + args[0] + ";\n");
 				break;
 
 			case "/exit" :
