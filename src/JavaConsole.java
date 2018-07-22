@@ -1,6 +1,9 @@
 import java.io.*;
-import static java.util.Objects.requireNonNull;
 import java.util.Arrays;
+import java.nio.file.Files;
+
+import static java.util.Objects.requireNonNull;
+import static java.nio.file.StandardOpenOption.*;
 
 class JavaConsole{
     private static final String CLASSNAME = "TEMPCLASS";
@@ -33,15 +36,15 @@ class JavaConsole{
 		}
     }
 
-	boolean executeCommand(String command){ // returns true only if the console is to be exited
-		String [] tokens = command.trim().split("\\s+");
-		command = tokens[0];
+	boolean executeCommand(String commandLine){ // returns true only if the console is to be exited
+		String [] tokens = commandLine.trim().split("\\s+");
+		String command = tokens[0];
 		String [] args = Arrays.copyOfRange(tokens, 1, tokens.length);
 
 		switch(command){
 			case "/end" :
-				if(writeToSrcfile() && compile())
-					execute(); // execute only if previous method calls succeed
+				if(compile())
+					execute(); // execute only if call to compile() succeed
 				snippetBuffer = new StringBuilder();
 				break;
 
@@ -66,11 +69,12 @@ class JavaConsole{
     boolean writeToSrcfile(){ // returns true on success, false otherwise
 		String imports = importBuffer.toString();
 		String snippet = snippetBuffer.toString();
-		try(FileWriter file = new FileWriter(srcfile)){
-			file.write(imports + PREFIX + snippet + SUFFIX);
+		byte [] filedata = (imports + PREFIX + snippet + SUFFIX).getBytes();
+		try{
+			Files.write(srcfile.toPath(), filedata, CREATE, TRUNCATE_EXISTING, WRITE);
 			return true;
-		} catch(IOException e){ 
-			System.err.printf("unable to create file %s in current directory%n", srcfile.getName()); 
+		} catch(IOException e){
+			System.err.println("error writing to file: " + e);
 			return false;
 		}
 	}
@@ -111,9 +115,9 @@ class JavaConsole{
 		importBuffer = new StringBuilder();
 
 		srcfile = new File(CLASSNAME + ".java");
-		srcfile.deleteOnExit();
+		srcfile.deleteOnExit(); 
 
-		new File(CLASSNAME + ".class").deleteOnExit();
+		new File(CLASSNAME + ".class").deleteOnExit(); // delete both files in the end
     }
 
     public static void main(String [] args){
