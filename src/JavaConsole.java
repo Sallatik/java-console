@@ -29,7 +29,7 @@ class JavaConsole{
 				if(isCommand(line))
 					exit = executeCommand(line);
 				else
-					snippetBuffer.append(line + ';');
+					snippetBuffer.append(line + '\n');
 			}
 		} catch(IOException e){
 	    	System.err.println("no input");
