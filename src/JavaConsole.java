@@ -1,6 +1,6 @@
 import java.io.*;
 import java.util.Arrays;
-import java.nio.file.Files;
+import java.nio.file.*;
 
 import static java.util.Objects.requireNonNull;
 import static java.nio.file.StandardOpenOption.*;
@@ -39,15 +39,29 @@ class JavaConsole{
 		}
     }
 
+	private boolean isValidJDKPath(String path){
+		return Files.isExecutable(Paths.get(path + "/bin/javac"))
+			&& Files.isExecutable(Paths.get(path + "/bin/java"));
+	}
+
 	private void setJdkPath(){
-		if((jdkPath = System.getenv("JAVA_HOME")) == null){
-			out.println("JDK can not be located automatically.\nPlease input the full path to JDK: ");
+		String path = System.getenv("JAVA_HOME");
+		if(!isValidJDKPath(path)){
+			out.println("JDK can not be located automatically.");
 			try{
-				jdkPath = new BufferedReader(new InputStreamReader(in)).readLine();
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+				do{
+					out.println("Path to JDK:");
+					path = input.readLine();
+					if(!isValidJDKPath(path))
+						out.println("invalid path");
+				} while(!isValidJDKPath(path));
 			} catch(IOException e){
 				System.err.println("no input");
 			}
 		}
+
+		jdkPath = path;
 	}
 
 	private boolean executeCommand(String commandLine){ // returns true only if the console is to be exited
