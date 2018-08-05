@@ -20,6 +20,8 @@ class JavaConsole{
     private StringBuilder snippetBuffer;
 	private StringBuilder importBuffer;
 
+	private String jdkPath;
+
     void run(){
 		try(BufferedReader input = new BufferedReader(new InputStreamReader(in))){
 			boolean exit = false;
@@ -84,7 +86,7 @@ class JavaConsole{
 	    	return false;
 	int exitValue = 1;
 		try{
-	    	exitValue = new ProcessBuilder("javac", srcfile.getName())
+	    	exitValue = new ProcessBuilder(jdkPath + "/bin/javac", srcfile.getName())
 	        	.inheritIO()
 				.start()
 				.waitFor();
@@ -99,7 +101,7 @@ class JavaConsole{
 
     void execute(){
 		try{
-	    	new ProcessBuilder("java", CLASSNAME)
+	    	new ProcessBuilder(jdkPath + "/bin/java", CLASSNAME)
 	        	.inheritIO()
 				.start()
 			.waitFor();
@@ -118,6 +120,7 @@ class JavaConsole{
 		srcfile.deleteOnExit(); 
 
 		new File(CLASSNAME + ".class").deleteOnExit(); // delete both files in the end
+		jdkPath = System.getenv("JAVA_HOME");
     }
 
     public static void main(String [] args){
