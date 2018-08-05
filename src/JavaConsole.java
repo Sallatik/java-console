@@ -28,18 +28,29 @@ class JavaConsole{
 			while(!exit){
 				out.print("java-console > ");
 				String line = input.readLine();
-				if(isCommand(line))
-					exit = executeCommand(line);
-				else
-					snippetBuffer.append(line + '\n');
+				if(line.length() > 0)
+					if(isCommand(line))
+						exit = executeCommand(line);
+					else
+						snippetBuffer.append(line + '\n');
 			}
 		} catch(IOException e){
 	    	System.err.println("no input");
 		}
     }
 
+	private void setJdkPath(){
+		if((jdkPath = System.getenv("JAVA_HOME")) == null){
+			out.println("JDK can not be located automatically.\nPlease input the full path to JDK: ");
+			try{
+				jdkPath = new BufferedReader(new InputStreamReader(in)).readLine();
+			} catch(IOException e){
+				System.err.println("no input");
+			}
+		}
+	}
+
 	private boolean executeCommand(String commandLine){ // returns true only if the console is to be exited
-		System.out.println(jdkPath); // DELETE
 		String [] tokens = commandLine.trim().split("\\s+");
 		String command = tokens[0];
 		String [] args = Arrays.copyOfRange(tokens, 1, tokens.length);
@@ -121,7 +132,7 @@ class JavaConsole{
 		srcfile.deleteOnExit(); 
 
 		new File(CLASSNAME + ".class").deleteOnExit(); // delete both files in the end
-		jdkPath = System.getenv("JAVA_HOME");
+		setJdkPath();
     }
 
     public static void main(String [] args){
