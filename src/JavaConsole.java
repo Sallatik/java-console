@@ -38,7 +38,8 @@ class JavaConsole{
 		}
     }
 
-	boolean executeCommand(String commandLine){ // returns true only if the console is to be exited
+	private boolean executeCommand(String commandLine){ // returns true only if the console is to be exited
+		System.out.println(jdkPath); // DELETE
 		String [] tokens = commandLine.trim().split("\\s+");
 		String command = tokens[0];
 		String [] args = Arrays.copyOfRange(tokens, 1, tokens.length);
@@ -64,11 +65,11 @@ class JavaConsole{
 
 	
 
-	boolean isCommand(String s){
+	private boolean isCommand(String s){
 		return s.charAt(0) == '/';
 	}
 
-    boolean writeToSrcfile(){ // returns true on success, false otherwise
+    private boolean writeToSrcfile(){ // returns true on success, false otherwise
 		String imports = importBuffer.toString();
 		String snippet = snippetBuffer.toString();
 		byte [] filedata = (imports + PREFIX + snippet + SUFFIX).getBytes();
@@ -81,10 +82,10 @@ class JavaConsole{
 		}
 	}
 
-    boolean compile(){ // returns true if the code has compiled
+    private boolean compile(){ // returns true if the code has compiled
 		if(!writeToSrcfile())
 	    	return false;
-	int exitValue = 1;
+		int exitValue = 1;
 		try{
 	    	exitValue = new ProcessBuilder(jdkPath + "/bin/javac", srcfile.getName())
 	        	.inheritIO()
@@ -99,7 +100,7 @@ class JavaConsole{
 				return false;
     	}
 
-    void execute(){
+    private void execute(){
 		try{
 	    	new ProcessBuilder(jdkPath + "/bin/java", CLASSNAME)
 	        	.inheritIO()
